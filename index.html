@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Nave</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Variáveis do jogo
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 100,
+            width: 50,
+            height: 50,
+            color: "blue",
+            speed: 8,
+            dx: 0
+        };
+
+        const meteors = [];
+        let score = 0;
+        let gameOver = false;
+
+        // Criar meteoros
+        function createMeteor() {
+            const meteor = {
+                x: Math.random() * (canvas.width - 50),
+                y: -50,
+                width: 50,
+                height: 50,
+                color: "red",
+                speed: Math.random() * 3 + 2
+            };
+            meteors.push(meteor);
+        }
+
+        // Atualizar posição do jogador
+        function movePlayer() {
+            player.x += player.dx;
+
+            // Impedir que a nave saia da tela
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+        }
+
+        // Atualizar meteoros
+        function updateMeteors() {
+            for (let meteor of meteors) {
+                meteor.y += meteor.speed;
+
+                // Verifica colisão com o jogador
+                if (
+                    player.x < meteor.x + meteor.width &&
+                    player.x + player.width > meteor.x &&
+                    player.y < meteor.y + meteor.height &&
+                    player.y + player.height > meteor.y
+                ) {
+                    gameOver = true;
+                }
+            }
+
+            // Remover meteoros fora da tela
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                if (meteors[i].y > canvas.height) {
+                    meteors.splice(i, 1);
+                    score++; // Aumenta a pontuação ao evitar um meteoro
+                }
+            }
+        }
+
+        // Desenhar jogador
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        // Desenhar meteoros
+        function drawMeteors() {
+            for (let meteor of meteors) {
+                ctx.fillStyle = meteor.color;
+                ctx.fillRect(meteor.x, meteor.y, meteor.width, meteor.height);
+            }
+        }
+
+        // Exibir pontuação
+        function drawScore() {
+            document.getElementById("score").innerText = `Score: ${score}`;
+        }
+
+        // Atualizar o jogo
+        function update() {
+            if (gameOver) {
+                alert("Game Over! Refresh to play again.");
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            movePlayer();
+            updateMeteors();
+
+            drawPlayer();
+            drawMeteors();
+            drawScore();
+
+            requestAnimationFrame(update);
+        }
+
+        // Eventos do teclado
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowLeft") {
+                player.dx = -player.speed;
+            } else if (e.key === "ArrowRight") {
+                player.dx = player.speed;
+            }
+        });
+
+        document.addEventListener("keyup", (e) => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                player.dx = 0;
+            }
+        });
+
+        // Inicia o jogo
+        setInterval(createMeteor, 1000); // Cria um meteoro a cada segundo
+        update();
+    </script>
+</body>
+</html>
